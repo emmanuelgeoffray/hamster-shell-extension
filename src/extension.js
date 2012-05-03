@@ -30,6 +30,7 @@ let ApiProxy = DBus.makeProxyClass({
     name: 'org.gnome.Hamster',
     methods: [
         {name: 'GetTodaysFacts', inSignature: '', outSignature: 'a(iiissisasii)'},
+        {name: 'GetFacts', inSignature: 'uus', outSignature: 'a(iiissisasii)'},
         {name: 'StopTracking', inSignature: 'i'},
         {name: 'Toggle', inSignature: ''},
         {name: 'AddFact', inSignature: 'siib', outSignature: 'i'},
@@ -255,7 +256,16 @@ HamsterExtension.prototype = {
     },
 
     refresh: function() {
-        this._proxy.GetTodaysFactsRemote(DBus.CALL_FLAG_START, Lang.bind(this, function(response, err) {
+        let datenow = new Date()
+        datenow = new Date(datenow.setUTCMinutes(datenow.getUTCMinutes() - datenow.getTimezoneOffset())); // getting back to UTC
+        let epochSecondsNow = Math.floor(datenow.getTime() / 1000);
+        let date = new Date()
+        date.setDate(date.getDate()-2);
+        date = new Date(date.setUTCMinutes(date.getUTCMinutes() - date.getTimezoneOffset())); // getting back to UTC
+        let epochSeconds = Math.floor(date.getTime() / 1000);
+
+        this._proxy.GetFactsRemote(epochSeconds , epochSecondsNow, "", DBus.CALL_FLAG_START, Lang.bind(this, function(response, err) {
+        //this._proxy.GetTodaysFactsRemote(DBus.CALL_FLAG_START, Lang.bind(this, function(response, err) {
             let facts = fromDbusFacts(response);
 
             this.currentActivity = null;
